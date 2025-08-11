@@ -29,20 +29,3 @@ variable "tags" {
   description = "Tags to apply"
   default     = {}
 }
-
-variable "remote_state_rg" {
-  type        = string
-  description = "RG hosting the state storage account"
-}
-variable "remote_state_storage_account" {
-  type        = string
-  description = "State storage account name"
-}
-variable "remote_state_container" {
-  type        = string
-  description = "State container name"
-}
-variable "remote_state_key" {
-  type        = string
-  description = "Blob key for the other workspace's state (e.g. core-net/prod.tfstate)"
-}
