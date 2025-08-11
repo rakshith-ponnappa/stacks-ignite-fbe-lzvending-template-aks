@@ -19,24 +19,24 @@ resource "azurerm_resource_group" "rg_vnet" {
   tags     = var.tags
 }
 
-resource "azurerm_resource_group" "rg_nw" {
-  name     = "NetworkWatcherRG"
-  location = var.location
-  tags     = var.tags
-}
+# resource "azurerm_resource_group" "rg_nw" {
+#   name     = "NetworkWatcherRG"
+#   location = var.location
+#   tags     = var.tags
+# }
 
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name
   address_space       = var.vnet_address_space
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg_vnet.location
+  resource_group_name = azurerm_resource_group.rg_vnet.name
   tags                = var.tags
 }
 
 # (Optional) create one or more subnets
 resource "azurerm_subnet" "workload" {
   name                 = "snet-workload"
-  resource_group_name  = azurerm_resource_group.rg.name
+  resource_group_name  = azurerm_resource_group.rg_vnet.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [var.subnet_prefix]
 }
