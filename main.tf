@@ -1,0 +1,58 @@
+terraform {
+  required_version = ">= 1.5.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.110"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+# --- New RG + VNet ---
+resource "azurerm_resource_group" "rg" {
+  name     = var.rg_name
+  location = var.location
+  tags     = var.tags
+}
+
+resource "azurerm_virtual_network" "vnet" {
+  name                = var.vnet_name
+  address_space       = var.vnet_address_space
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tags                = var.tags
+}
+
+# (Optional) create one or more subnets
+resource "azurerm_subnet" "workload" {
+  name                 = "snet-workload"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [var.subnet_prefix]
+}
+
+# --- Connect VNet to the existing vWAN Hub ---
+# If you used the data.azurerm_virtual_hub approach above, swap the virtual_hub_id.
+resource "azurerm_virtual_hub_connection" "vhub_conn" {
+  name                      = "${var.vnet_name}-to-vhub"
+  virtual_hub_id            = data.terraform_remote_state.prd_eastus2_connectivity.outputs.virtual_hub_resource_id
+  remote_virtual_network_id = azurerm_virtual_network.vnet.id
+
+  # Common knobs (enable if you need them)
+  # internet_security_enabled = true
+
+  # If the remote state also exports custom route table IDs, you can wire them:
+  # routing {
+  #   associated_route_table_id = data.terraform_remote_state.core_network.outputs.default_route_table_id
+  #   propagated_route_table {
+  #     route_table_ids = [
+  #       data.terraform_remote_state.core_network.outputs.default_route_table_id
+  #     ]
+  #     labels = ["default"]
+  #   }
+  # }
+}
