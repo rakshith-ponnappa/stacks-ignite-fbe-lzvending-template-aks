@@ -12,9 +12,15 @@ provider "azurerm" {
   features {}
 }
 
-# --- New RG + VNet ---
-resource "azurerm_resource_group" "rg" {
+
+resource "azurerm_resource_group" "rg_vnet" {
   name     = var.rg_name
+  location = var.location
+  tags     = var.tags
+}
+
+resource "azurerm_resource_group" "rg_nw" {
+  name     = "NetworkWatcherRG"
   location = var.location
   tags     = var.tags
 }
