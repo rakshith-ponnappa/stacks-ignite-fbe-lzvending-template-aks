@@ -10,6 +10,10 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ENVIRONMENT_NAME: 'prd'
+  TF_VAR_azure_geography: 'United States'
+  TF_VAR_azure_location: 'eastus2'
+  TF_VAR_environment: 'prd'
 
 jobs:
   terraform:
