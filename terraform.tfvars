@@ -1,5 +1,5 @@
-rg_name                 = "rg-app-euw-prod"
-vnet_name               = "vnet-app-euw-prod"
+rg_name                 = "rg-vnet"
+vnet_name               = "vnet-eus2-prod"
 vnet_address_space      = ["10.50.0.0/16"]
 subnet_prefix           = "10.50.1.0/24"
 

@@ -42,10 +42,8 @@ resource "azurerm_virtual_hub_connection" "vhub_conn" {
   virtual_hub_id            = data.terraform_remote_state.prd_eastus2_connectivity.outputs.virtual_hub_resource_id
   remote_virtual_network_id = azurerm_virtual_network.vnet.id
 
-  # Common knobs (enable if you need them)
   # internet_security_enabled = true
 
-  # If the remote state also exports custom route table IDs, you can wire them:
   # routing {
   #   associated_route_table_id = data.terraform_remote_state.core_network.outputs.default_route_table_id
   #   propagated_route_table {
