@@ -8,7 +8,7 @@ data "terraform_remote_state" "prd_eastus2_connectivity" {
 
     storage_account_name = "steefbeeus2contfstate"
     container_name   = "tfstate"
-    key              = "connectivity/core"
+    key              = "connectivity/coreenv:prd"
     use_azuread_auth = true
     
   }
@@ -24,7 +24,7 @@ data "terraform_remote_state" "prd_centralus_connectivity" {
     
     storage_account_name = "steefbecuscontfstate"
     container_name       = "tfstate"
-    key                  = "connectivity/core"
+    key                  = "connectivity/coreenv:prd"
     use_azuread_auth     = true
   }
 }
