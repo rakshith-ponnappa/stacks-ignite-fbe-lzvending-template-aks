@@ -12,8 +12,17 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
 
 jobs:
+  initial-sleep:
+    # This job is only run on the first run of the workflow to allow for any initial setup (secrets/vars).
+    if: github.run_number == 1
+    name: 'Initial Sleep'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sleep for 60 seconds
+        run: sleep 60
   terraform:
-    name: 'Terraform Apply'
+    name: 'Deploy Terraform'
     runs-on: ubuntu-latest
 
     steps:
