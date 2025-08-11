@@ -19,11 +19,11 @@ resource "azurerm_resource_group" "rg_vnet" {
   tags     = var.tags
 }
 
-# resource "azurerm_resource_group" "rg_nw" {
-#   name     = "NetworkWatcherRG"
-#   location = var.location
-#   tags     = var.tags
-# }
+resource "azurerm_resource_group" "rg_nw" {
+  name     = "NetworkWatcherRG"
+  location = var.location
+  tags     = var.tags
+}
 
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name

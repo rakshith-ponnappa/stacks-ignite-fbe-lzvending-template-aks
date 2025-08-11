@@ -16,7 +16,7 @@ env:
 jobs:
   terraform:
     # Prevents the job from running on the first run of the workflow (during vending and the secrets/vars are not yet available)
-    if: github.run_number != 1 
+    #if: github.run_number != 1 
     name: 'Deploy Terraform'
     runs-on: ubuntu-latest
 
