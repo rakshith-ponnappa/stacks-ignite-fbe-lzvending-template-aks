@@ -11,7 +11,6 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
   ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
-  SUBSCRIPTION_ALIAS_NAME: ${{ vars.SUBSCRIPTION_ALIAS_NAME }}
 
 jobs:
   terraform:
@@ -30,13 +29,13 @@ jobs:
           terraform_version: 1.12.2
   
       - name: Terraform Init
-        run: terraform init -reconfigure -backend-config="key=${{ env.SUBSCRIPTION_ALIAS_NAME }}" -backend-config="container_name=${{ env.SUBSCRIPTION_ALIAS_NAME }}" -backend-config="storage_account_name=satfstate${{ env.SUBSCRIPTION_ALIAS_NAME }}"
+        run: terraform init -reconfigure -backend-config="key=${{ vars.SUBSCRIPTION_ALIAS_NAME }}" -backend-config="container_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}" -backend-config="storage_account_name=satfstate${{ vars.SUBSCRIPTION_ALIAS_NAME }}"
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars"
+        run: terraform plan -var-file="terraform.tfvars" -var "subscription_alias_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}"
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="terraform.tfvars"
+        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var "subscription_alias_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}"

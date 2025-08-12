@@ -29,3 +29,8 @@ variable "tags" {
   description = "Tags to apply"
   default     = {}
 }
+
+variable "subscription_alias_name" {
+  type        = string
+  description = "Subscription alias"
+}

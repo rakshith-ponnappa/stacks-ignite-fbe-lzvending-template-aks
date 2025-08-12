@@ -26,7 +26,7 @@ resource "azurerm_subnet" "workload" {
 }
 
 resource "azurerm_virtual_hub_connection" "vhub_conn" {
-  name                      = "${var.vnet_name}-to-vhub"
+  name                      = "${var.vnet_name}-${var.subscription_alias_name}-to-vhub"
   virtual_hub_id            = data.terraform_remote_state.prd_eastus2_connectivity.outputs.virtual_hub_resource_id
   remote_virtual_network_id = azurerm_virtual_network.vnet.id
 
