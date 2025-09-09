@@ -1,7 +1,6 @@
 variable "location" {
   type        = string
   description = "Azure region"
-  default     = "East US 2"
 }
 
 variable "rg_name" {
@@ -33,4 +32,9 @@ variable "tags" {
 variable "subscription_alias_name" {
   type        = string
   description = "Subscription alias"
+}
+
+variable "virtual_hub_id" {
+  type        = string
+  description = "The ID of the Virtual Hub to connect to"
 }
