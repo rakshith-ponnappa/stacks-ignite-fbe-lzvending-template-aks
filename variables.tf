@@ -3,6 +3,11 @@ variable "location" {
   description = "Azure region"
 }
 
+variable "environment" {
+  type        = string
+  description = "Environment name"
+}
+
 variable "rg_name" {
   type        = string
   description = "Resource group for the new VNet"

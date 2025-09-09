@@ -37,7 +37,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -var "subscription_alias_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}"
+        run: terraform plan -var-file="terraform.tfvars" -var "subscription_alias_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}" -var "environment=${{ inputs.env }}"
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var "subscription_alias_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}"
+        run: terraform apply -auto-approve -var-file="terraform.tfvars" -var "subscription_alias_name=${{ vars.SUBSCRIPTION_ALIAS_NAME }}" -var "environment=${{ inputs.env }}"
