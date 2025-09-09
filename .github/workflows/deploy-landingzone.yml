@@ -1,10 +1,11 @@
-name: Landing Zone Pipeline
+name: Deploy Landing Zone
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      env:
+        required: true
+        type: string
 
 env:
   ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
@@ -17,6 +18,7 @@ jobs:
     # Prevents the job from running on the first run of the workflow (during vending and the secrets/vars are not yet available)
     if: github.run_number != 1 
     name: 'Deploy Terraform'
+    environment: ${{ inputs.env }}
     runs-on: ubuntu-latest
 
     steps:

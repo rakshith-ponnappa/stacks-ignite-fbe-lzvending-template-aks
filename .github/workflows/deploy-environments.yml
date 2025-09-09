@@ -1,0 +1,28 @@
+name: Deploy Environments
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  dev:
+    uses: ./.github/workflows/deploy-landingzone.yml
+    with: 
+      env: dev
+    secrets: inherit
+
+  uat:
+    needs: dev
+    uses: ./.github/workflows/deploy-landingzone.yml
+    with:
+      env: uat
+    secrets: inherit
+
+  prod:
+    needs: uat
+    uses: ./.github/workflows/deploy-landingzone.yml
+    with:
+      env: prod
+    secrets: inherit
