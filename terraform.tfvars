@@ -10,4 +10,4 @@ tags = {
   owner       = "platform"
 }
 
-virtual_hub_id = "/subscriptions/cea31a73-c42c-4b17-b83d-c629142bf942/resourceGroups/rg-eus2-fbe-prd-networking-001/providers/Microsoft.Network/virtualHubs/vwan-eus2-fbe-prd-hub-001"
+#virtual_hub_id = "/subscriptions/cea31a73-c42c-4b17-b83d-c629142bf942/resourceGroups/rg-eus2-fbe-prd-networking-001/providers/Microsoft.Network/virtualHubs/vwan-eus2-fbe-prd-hub-001"
