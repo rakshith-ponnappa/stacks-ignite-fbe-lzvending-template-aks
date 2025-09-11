@@ -38,8 +38,3 @@ variable "subscription_alias_name" {
   type        = string
   description = "Subscription alias"
 }
-
-variable "virtual_hub_id" {
-  type        = string
-  description = "The ID of the Virtual Hub to connect to"
-}
