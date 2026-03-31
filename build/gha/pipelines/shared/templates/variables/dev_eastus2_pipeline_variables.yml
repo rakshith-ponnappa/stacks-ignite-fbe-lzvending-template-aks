@@ -1,0 +1,6 @@
+location_code: 'eus2'
+
+# Terraform inputs
+# these will also be mapped to environment variables in uppercase with 'TF_VAR_' removed. For example: 'AZURE_LOCATION'
+TF_VAR_azure_location: 'eastus2'
+TF_VAR_environment: 'dev'

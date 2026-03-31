@@ -1,0 +1,244 @@
+name: '__APPLICATION_NAME__ Core - Deployment'
+run-name: ${{ inputs.terraform_action || 'apply' }} - ${{ vars.SUBSCRIPTION_ALIAS_NAME }} by @${{ github.actor }}
+
+on:
+  push:
+    paths:
+      - .github/actions/**
+      - .github/workflows/**
+      - build/powershell/**
+      - build/gha/pipelines/core/**
+      - deploy/core/**
+      - .checkov.yaml
+      - .terraform-docs.yml
+      - .terraform-version
+      - .tflint.hcl
+      - yamllint.conf
+      - '!.github/workflows/pipeline-app*.yml'
+    branches:
+      - main
+
+  pull_request:
+    paths:
+      - .github/actions/**
+      - .github/workflows/**
+      - build/gha/pipelines/core/**
+      - build/powershell/**
+      - deploy/core/**
+      - .checkov.yaml
+      - .terraform-docs.yml
+      - .terraform-version
+      - .tflint.hcl
+      - yamllint.conf
+      - '!.github/workflows/pipeline-app*.yml'
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      terraform_action:
+        description: "Terraform action to perform"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - "apply"
+          - "destroy"
+      deploy_dev:
+        description: "Deploy to Dev"
+        required: true
+        default: true
+        type: boolean
+      deploy_uat:
+        description: "Deploy to UAT"
+        required: true
+        default: true
+        type: boolean
+      deploy_prd:
+        description: "Deploy to Prd"
+        required: true
+        default: true
+        type: boolean
+      deploy_eastus2:
+        description: "Deploy to East US 2"
+        required: true
+        default: true
+        type: boolean
+      deploy_centralus:
+        description: "Deploy to Central US"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+jobs:
+  BUILD:
+    if: github.run_number != 1
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_build.yml@main
+    with:
+      terraform_root_module_directory: "deploy/core/terraform"
+      variable_template_directory: "./build/gha/pipelines/core/templates/variables"
+      variable_templates: ("common_pipeline_variables.yml")
+    secrets:
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  COST-ESTIMATE:
+    if: github.run_number != 1
+    needs: [BUILD]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_cost_estimate.yml@main
+    with:
+      terraform_root_module_directory: "deploy/core/terraform"
+      variable_template_directory: "./build/gha/pipelines/core/templates/variables"
+      variable_templates: ("common_pipeline_variables.yml")
+      environment_regions: "dev_eastus2,uat_eastus2,prd_eastus2"
+    secrets:
+      INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  DEV-EASTUS2:
+    if: >
+      github.run_number != 1 &&
+      (github.event_name == 'pull_request' || (github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || (inputs.deploy_dev && inputs.deploy_eastus2))))
+    needs: [BUILD, COST-ESTIMATE]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_deploy.yml@main
+    with:
+      environment_name: dev
+      terraform_action: ${{ github.event.inputs.terraform_action || 'apply' }}
+      terraform_root_module_directory: deploy/core/terraform
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml", "./build/gha/pipelines/shared/templates/variables/dev_eastus2_pipeline_variables.yml")
+      location_code: EUS2
+      state_lockdown_all_location_storage_accounts: true
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+    secrets:
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  DEV-CENTRALUS:
+    if: github.run_number != 1 && github.event_name == 'workflow_dispatch' && inputs.deploy_dev && inputs.deploy_centralus
+    needs: [BUILD, COST-ESTIMATE]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_deploy.yml@main
+    with:
+      environment_name: dev
+      terraform_action: ${{ github.event.inputs.terraform_action || 'apply' }}
+      terraform_root_module_directory: deploy/core/terraform
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml", "./build/gha/pipelines/shared/templates/variables/dev_centralus_pipeline_variables.yml")
+      location_code: CUS
+      state_lockdown_all_location_storage_accounts: true
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+    secrets:
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  UAT-EASTUS2:
+    if: >
+      !cancelled() && !failure() &&
+      github.run_number != 1 &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_dispatch' || (inputs.deploy_uat && inputs.deploy_eastus2))
+    needs: [DEV-EASTUS2]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_deploy.yml@main
+    with:
+      environment_name: uat
+      terraform_action: ${{ github.event.inputs.terraform_action || 'apply' }}
+      terraform_root_module_directory: deploy/core/terraform
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml", "./build/gha/pipelines/shared/templates/variables/uat_eastus2_pipeline_variables.yml")
+      location_code: EUS2
+      state_lockdown_all_location_storage_accounts: true
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+    secrets:
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  UAT-CENTRALUS:
+    if: >
+      !cancelled() && !failure() &&
+      github.run_number != 1 &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.deploy_uat && inputs.deploy_centralus
+    needs: [DEV-CENTRALUS]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_deploy.yml@main
+    with:
+      environment_name: uat
+      terraform_action: ${{ github.event.inputs.terraform_action || 'apply' }}
+      terraform_root_module_directory: deploy/core/terraform
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml", "./build/gha/pipelines/shared/templates/variables/uat_centralus_pipeline_variables.yml")
+      location_code: CUS
+      state_lockdown_all_location_storage_accounts: true
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+    secrets:
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  PRD-EASTUS2:
+    if: >
+      !cancelled() && !failure() &&
+      github.run_number != 1 &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_dispatch' || (inputs.deploy_prd && inputs.deploy_eastus2))
+    needs: [UAT-EASTUS2]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_deploy.yml@main
+    with:
+      environment_name: prd
+      terraform_action: ${{ github.event.inputs.terraform_action || 'apply' }}
+      terraform_root_module_directory: deploy/core/terraform
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml", "./build/gha/pipelines/shared/templates/variables/prd_eastus2_pipeline_variables.yml")
+      location_code: EUS2
+      state_lockdown_all_location_storage_accounts: true
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+    secrets:
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  PRD-CENTRALUS:
+    if: >
+      !cancelled() && !failure() &&
+      github.run_number != 1 &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.deploy_prd && inputs.deploy_centralus
+    needs: [UAT-CENTRALUS]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_deploy.yml@main
+    with:
+      environment_name: prd
+      terraform_action: ${{ github.event.inputs.terraform_action || 'apply' }}
+      terraform_root_module_directory: deploy/core/terraform
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml", "./build/gha/pipelines/shared/templates/variables/prd_centralus_pipeline_variables.yml")
+      location_code: CUS
+      state_lockdown_all_location_storage_accounts: true
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+    secrets:
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+
+  FINAL:
+    if: (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch') && (github.event.inputs.terraform_action || 'apply') == 'apply' && github.run_number != 1 && (!cancelled())
+    needs: [PRD-EASTUS2, PRD-CENTRALUS]
+    uses: FiveB-Infra/fb-pipeline-templates/.github/workflows/template_final.yml@main
+    with:
+      variable_template_directory: ./build/gha/pipelines/core/templates/variables
+      variable_templates: ("common_pipeline_variables.yml")
+      terraform_root_module_directory: deploy/core/terraform
+    secrets:
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
