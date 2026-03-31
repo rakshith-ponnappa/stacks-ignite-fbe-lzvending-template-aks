@@ -1,0 +1,25 @@
+# Taskctl
+taskctl_version: "1.7.5"
+
+# Checkov
+# uncomment code to install a specific version, else the latest version is installed
+# checkov_version: '3.2.431'
+
+# TEnv
+# When set to true, will install the specified Terraform version in '.terraform-version' if not installed
+TENV_AUTO_INSTALL: 'true'
+
+
+# Terraform
+tf_state_storage_account_container_name: 'tfstate'
+
+# Terrform inputs
+TF_VAR_service_name: 'core'
+TF_VAR_azure_geography: 'United States'
+
+TF_VAR_service_cidr: '10.0.0.0/24'
+TF_VAR_dns_service_ip: '10.0.0.10'
+
+# Optional state storage lockdown (taskctl state:storage:lockdown)
+TFSTATE_LOCKDOWN_ENABLED: "true"
+TFSTATE_DNS_LOOKUP_SUBSCRIPTION: "fb-connectivity-1"

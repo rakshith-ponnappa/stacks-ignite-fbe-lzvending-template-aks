@@ -1,0 +1,62 @@
+name: 'App Orchestration'
+run-name: ${{ inputs.action }} - App Orchestration ${{ vars.SUBSCRIPTION_ALIAS_NAME }} ${{ inputs.application_name }} by @${{ github.actor }}
+
+# =============================================================================
+# This workflow scaffolds application infrastructure templates into the caller
+# repository by calling a reusable workflow from FiveB-Infra/fb-app-orchestration.
+#
+# The external repository contains:
+# - Terraform modules for K8s namespaces, UAIs, RBAC, and more
+# - Reusable workflow templates
+# - Per-application pipeline templates
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      application_name:
+        description: "Name of the application to onboard"
+        required: true
+        type: string
+      application_name_short:
+        description: "Short name for the application (<=4 chars) (used for resources with character limits, e.g. storage accounts and key vaults)"
+        required: true
+        type: string
+      action:
+        description: "Action to perform: 'create' to scaffold application files, 'destroy' to remove them"
+        required: false
+        type: choice
+        options:
+          - create
+          - destroy
+        default: "create"
+      ingress_type:
+        description: "Ingress type: 'external' (Front Door + PLS + NGINX) or 'internal' (AGIC Application Gateway)"
+        required: false
+        type: choice
+        options:
+          - "external"
+          - "internal"
+        default: "internal"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # =============================================================================
+  # Scaffold application templates into the caller repository
+  # =============================================================================
+  ORCHESTRATE:
+    uses: FiveB-Infra/fb-app-orchestration/.github/workflows/template_app_orchestration.yml@main
+    with:
+      application_name: ${{ inputs.application_name }}
+      application_name_short: ${{ inputs.application_name_short }}
+      environment: dev
+      caller_repository: ${{ github.repository }}
+      subscription_alias_name: ${{ vars.SUBSCRIPTION_ALIAS_NAME }}
+      ingress_type: ${{ inputs.ingress_type }}
+      action: ${{ inputs.action }}
+    secrets:
+      REPO_ACCESS_APP_PRIVATE_KEY: ${{ secrets.REPO_ACCESS_APP_PRIVATE_KEY }}
+      REPO_WORKFLOW_APP_PRIVATE_KEY: ${{ secrets.REPO_WORKFLOW_APP_PRIVATE_KEY }}
